@@ -18,28 +18,33 @@ class Game
     @secret_word_a = @dictionary_a.sample.split('')
 
     # Wrong guesses remaining?
-    @life_i = 5
+    @life_i = 7
 
     # Correct & incorrect guesses made by the player
     @correct_letters_a = []
     @incorrect_letters_a = []
+
+    puts "----- HANGMAN -----
+Welcome to the game!
+You have to guess the secret word to win the game.
+You must make less than #{life_i} incorrect guesses.\n "
   end
 
   # Player makes a guess of letter
   def make_a_guess
-    puts 'Guess a letter'
-    while true
-      # making it case insensitive & validating it
+    puts "Chances remaining: #{life_i}"
+    puts 'Please guess a letter : '
+    # making it case insensitive & validating it
+    loop do
       guess = gets.chomp.downcase
       if guess.length == 1 && guess.match?(/[A-Za-z]/)
-        break unless (correct_letters_a + incorrect_letters_a).include? guess
+        return guess unless (correct_letters_a + incorrect_letters_a).include? guess
 
         puts 'You have already entered this alphabet, please enter a new alphabet'
       else
         puts 'Please enter a valid alphabet'
       end
     end
-    guess
   end
 
   # Check if guess is correct or incorrect
@@ -49,8 +54,10 @@ class Game
       puts 'Your guess was correct!'
     else
       incorrect_letters_a.push(guess)
+      self.life_i = life_i - 1
       puts 'Your guess was incorect'
     end
+    puts ' '
   end
 
   # Check for a win
@@ -58,6 +65,17 @@ class Game
     secret_word_a.each do |letter|
       return false unless correct_letters_a.include?(letter)
     end
+    puts "The secret word was : #{secret_word_a.join(' ')}"
+    puts 'CONGRATULATIONS! You have won the game!'
+    true
+  end
+
+  # Check for game over (life_i == 0)
+  def game_over?
+    return false unless life_i.zero?
+
+    puts "The secret word was : #{secret_word_a.join(' ')}"
+    puts 'No chances remaining. GAME OVER!'
     true
   end
 
