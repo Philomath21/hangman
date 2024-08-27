@@ -1,5 +1,5 @@
 class Game
-  attr_accessor :secret_word_a, :correct_letters_a, :incorrect_leters_a, :life_i
+  attr_accessor :secret_word_a, :correct_letters_a, :incorrect_letters_a, :life_i
 
   def create_dictionary_a
     # Reading dictiory file as array of words
@@ -22,7 +22,7 @@ class Game
 
     # Correct & incorrect guesses made by the player
     @correct_letters_a = []
-    @incorrect_leters_a = []
+    @incorrect_letters_a = []
   end
 
   # Player makes a guess of letter
@@ -43,9 +43,18 @@ class Game
       self.correct_letters_a.push(guess)
       puts "Your guess was correct!"
     else
-      self.incorrect_leters_a.push(guess)
+      self.incorrect_letters_a.push(guess)
       puts "Your guess was incorect"
     end
   end
 
+  def to_s
+    secret_word = ""
+    self.secret_word_a.each do |letter|
+      secret_word += self.correct_letters_a.include?(letter) ?  "#{letter} " : "_ "
+    end
+
+    "Secret word: #{secret_word}
+Incorrect letters are: #{self.incorrect_letters_a.join(", ")}"
+  end
 end
