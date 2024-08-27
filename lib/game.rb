@@ -9,8 +9,8 @@ def create_dictionary_a
 end
 
 class Game
-  attr_accessor :correct_letters_a, :incorrect_letters_a, :life_i
-  attr_reader :secret_word_a
+  @@save_count = 0 # rubocop:disable Style/ClassVars
+  attr_accessor :correct_letters_a, :incorrect_letters_a, :life_i, :secret_word_a
 
   def initialize
     # Selecting a secret word,i.e a random word from dictionary
@@ -30,6 +30,19 @@ You have to guess the secret word to win the game.
 You must make less than #{life_i} incorrect guesses.\n "
   end
 
+  # Save game on pressing 0
+  def asked_to_save_game?(guess)
+    return false unless guess == '0'
+
+    @@save_count += 1 # rubocop:disable Style/ClassVars
+    save_a = [secret_word_a.join, life_i, correct_letters_a.join, incorrect_letters_a.join]
+    Dir.mkdir('save') unless Dir.exist?('save')
+    filename = "save/game_#{@@save_count}"
+    File.open(filename, 'w') { |file| file.puts save_a }
+    puts 'Game saved successfully!'
+    true
+  end
+
   # Player makes a guess of letter
   def make_a_guess
     puts "Chances remaining: #{life_i}"
@@ -37,7 +50,7 @@ You must make less than #{life_i} incorrect guesses.\n "
     # making it case insensitive & validating it
     loop do
       guess = gets.chomp.downcase
-      if guess.length == 1 && guess.match?(/[A-Za-z]/)
+      if (guess == '0') || (guess.length == 1 && guess.match?(/[A-Za-z]/))
         return guess unless (correct_letters_a + incorrect_letters_a).include? guess
 
         puts 'You have already entered this alphabet, please enter a new alphabet'
@@ -51,13 +64,12 @@ You must make less than #{life_i} incorrect guesses.\n "
   def check_guess(guess)
     if secret_word_a.include?(guess)
       correct_letters_a.push(guess)
-      puts 'Your guess was correct!'
+      puts "Your guess was correct!\n "
     else
       incorrect_letters_a.push(guess)
       self.life_i = life_i - 1
-      puts 'Your guess was incorect'
+      puts "Your guess was incorect\n "
     end
-    puts ' '
   end
 
   # Check for a win
