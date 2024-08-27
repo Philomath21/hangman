@@ -1,21 +1,21 @@
-class Game
-  attr_accessor :secret_word_a, :correct_letters_a, :incorrect_letters_a, :life_i
+# Creating dictionary array as per given condition in project
+def create_dictionary_a
+  # Reading dictiory file as array of words
+  dictionary_a = File.readlines 'google-10000-english-no-swears.txt'
+  # Removing \n (whitespaces) from words
+  dictionary_a.map!(&:strip)
+  # Selecting words having 5 to 12 characters
+  dictionary_a.select! { |word| (5..12).include? word.length }
+end
 
-  def create_dictionary_a
-    # Reading dictiory file as array of words
-    dictionary_a = File.readlines 'google-10000-english-no-swears.txt'
-    # Removing \n (whitespaces) from words
-    dictionary_a.map!(&:strip)
-    # Selecting words having 5 to 12 characters
-    dictionary_a.select! { |word| (5..12).include? word.length }
-  end
+class Game
+  attr_accessor :correct_letters_a, :incorrect_letters_a, :life_i
+  attr_reader :secret_word_a
 
   def initialize
-    @dictionary_a = create_dictionary_a
-
     # Selecting a secret word,i.e a random word from dictionary
     # And storing it in array format
-    @secret_word_a = @dictionary_a.sample.split('')
+    @secret_word_a = create_dictionary_a.sample.split('')
 
     # Wrong guesses remaining?
     @life_i = 7
@@ -81,12 +81,12 @@ You must make less than #{life_i} incorrect guesses.\n "
 
   # Print revealed letters in secret word & incorrect guesses
   def to_s
-    secret_word = ''
+    word = ''
     secret_word_a.each do |letter|
-      secret_word += correct_letters_a.include?(letter) ? "#{letter} " : '_ '
+      word += correct_letters_a.include?(letter) ? "#{letter} " : '_ '
     end
 
-    "Secret word: #{secret_word}
+    "Secret word: #{word}
 Incorrect letters are: #{incorrect_letters_a.join(', ')}"
   end
 end
