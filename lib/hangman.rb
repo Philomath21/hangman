@@ -1,15 +1,42 @@
 require_relative 'game'
 
-# Gameplay logic
-def play_game
-  my_game = Game.new
-  until my_game.game_won? || my_game.game_over?
-    puts my_game
-    guess = my_game.make_a_guess
-    break if my_game.asked_to_save_game?(guess)
+# Print welcome message
+def print_welcome
+  puts "----- HANGMAN -----
+Welcome to the game!
+You have to guess the secret word to win the game.
+You must make less than 7 incorrect guesses.
 
-    my_game.check_guess(guess)
+Press '1' > New Game
+Press '2' > Load Game"
+end
+
+# New game or load game?
+def select_new_or_load
+  loop do
+    case gets.chomp
+    when '1'
+      return Game.new
+    when '2'
+      # <> code to select save file name
+      puts 'savefile_name'
+      return Game.load_game('sec')
+    else
+      puts 'Invalid input. Please enter a valid input : '
+    end
   end
 end
 
-play_game
+# Gameplay logic
+def play_game(mygame)
+  until mygame.game_won? || mygame.game_over?
+    puts mygame
+    guess = mygame.make_a_guess
+    break if mygame.asked_to_save_game?(guess)
+
+    mygame.check_guess(guess)
+  end
+end
+
+print_welcome
+play_game(select_new_or_load)

@@ -10,47 +10,48 @@ def create_dictionary_a
   dictionary_a.select! { |word| (5..12).include? word.length }
 end
 
+# class Game
 class Game
-  # @@save_count = 0
-  attr_accessor :correct_letters_a, :incorrect_letters_a, :life_i, :secret_word_a
+  attr_accessor :secret_word_a, :life_i, :correct_letters_a, :incorrect_letters_a
 
-  def initialize
-    # Selecting a secret word,i.e a random word from dictionary
-    # And storing it in array format
-    @secret_word_a = create_dictionary_a.sample.split('')
+  def initialize(hash = {
+    # Selecting a secret word,i.e a random word from dictionary & storing it in array format
+    'secret_word_a' => create_dictionary_a.sample.split(''),
+    'life_i' => 7,                # Wrong guesses remaining?
+    'correct_letters_a' => [],    # Correct guesses made by the player
+    'incorrect_letters_a' => []   # Incorrect guesses made by the player
+  })
 
-    # Wrong guesses remaining?
-    @life_i = 7
-
-    # Correct & incorrect guesses made by the player
-    @correct_letters_a = []
-    @incorrect_letters_a = []
-
-    puts "----- HANGMAN -----
-Welcome to the game!
-You have to guess the secret word to win the game.
-You must make less than #{life_i} incorrect guesses.\n "
+    @secret_word_a       = hash['secret_word_a']
+    @life_i              = hash['life_i']
+    @correct_letters_a   = hash['correct_letters_a']
+    @incorrect_letters_a = hash['incorrect_letters_a']
   end
 
   # Save game on pressing 0, serializing using MessagePack
   def asked_to_save_game?(guess)
     return false unless guess == '0'
 
+    Dir.mkdir('save') unless Dir.exist?('save')
     puts 'Rename save game as : '
     savefile_name = gets.chomp
 
-    savefile_msgpack = {
-      secret_word_a: secret_word_a,
-      life_i: life_i,
-      correct_letters_a: correct_letters_a,
-      incorrect_letters_a: incorrect_letters_a
-    }.to_msgpack
-
-    Dir.mkdir('save') unless Dir.exist?('save')
-    File.open("save/#{savefile_name}", 'w') { |file| file.puts savefile_msgpack }
-
+    savefile = MessagePack.pack({
+                                  secret_word_a: secret_word_a,
+                                  life_i: life_i,
+                                  correct_letters_a: correct_letters_a,
+                                  incorrect_letters_a: incorrect_letters_a
+                                })
+    File.binwrite("save/#{savefile_name}.msgpack", savefile)
     puts 'Game saved successfully!'
     true
+  end
+
+  # Load game : returns load game parameters hash
+  def self.load_game(savefile_name)
+    savefile = File.binread("save/#{savefile_name}.msgpack")
+    savefile_hash = MessagePack.unpack(savefile) # savefile_hash
+    new(savefile_hash)
   end
 
   # Player makes a guess of letter
