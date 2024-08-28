@@ -1,55 +1,63 @@
 require 'msgpack'
 
-# Creating dictionary array as per given condition in project
-def create_dictionary_a
+# returns hash containing parameters to create a new Game class object
+def new_game_para_hash
+  # Creating dictionary array as per given condition in project
   # Reading dictiory file as array of words
-  dictionary_a = File.readlines 'google-10000-english-no-swears.txt'
   # Removing \n (whitespaces) from words
-  dictionary_a.map!(&:strip)
   # Selecting words having 5 to 12 characters
+
+  dictionary_a = File.readlines 'google-10000-english-no-swears.txt'
+  dictionary_a.map!(&:strip)
   dictionary_a.select! { |word| (5..12).include? word.length }
-end
 
-# class Game
-class Game
-  attr_accessor :secret_word_a, :life_i, :correct_letters_a, :incorrect_letters_a
-
-  def initialize(hash = {
+  {
     # Selecting a secret word,i.e a random word from dictionary & storing it in array format
-    'secret_word_a' => create_dictionary_a.sample.split(''),
+    'secret_word_a' => dictionary_a.sample.split(''),
     'life_i' => 7,                # Wrong guesses remaining?
     'correct_letters_a' => [],    # Correct guesses made by the player
     'incorrect_letters_a' => []   # Incorrect guesses made by the player
-  })
+  }
+end
 
-    @secret_word_a       = hash['secret_word_a']
-    @life_i              = hash['life_i']
-    @correct_letters_a   = hash['correct_letters_a']
-    @incorrect_letters_a = hash['incorrect_letters_a']
+# class Game, create new object for a new game
+class Game
+  attr_accessor :secret_word_a, :life_i, :correct_letters_a, :incorrect_letters_a
+
+  def initialize(hash = new_game_para_hash)
+    self.secret_word_a       = hash['secret_word_a']
+    self.life_i              = hash['life_i']
+    self.correct_letters_a   = hash['correct_letters_a']
+    self.incorrect_letters_a = hash['incorrect_letters_a']
   end
 
-  # Save game on pressing 0, serializing using MessagePack
+  # Saves game on pressing 0, serializes parameters hash using MessagePack
+  # returns true or false
   def asked_to_save_game?(guess)
     return false unless guess == '0'
 
     Dir.mkdir('save') unless Dir.exist?('save')
     puts 'Rename save game as : '
-    savefile_name = gets.chomp
+    savefile_name = gets.chomp.downcase
 
-    savefile = MessagePack.pack({
-                                  secret_word_a: secret_word_a,
-                                  life_i: life_i,
-                                  correct_letters_a: correct_letters_a,
-                                  incorrect_letters_a: incorrect_letters_a
-                                })
+    savefile_hash = {
+      'secret_word_a' => secret_word_a,
+      'life_i' => life_i,
+      'correct_letters_a' => correct_letters_a,
+      'incorrect_letters_a' => incorrect_letters_a
+    }
+    savefile = MessagePack.pack(savefile_hash)
     File.binwrite("save/#{savefile_name}.msgpack", savefile)
+
     puts 'Game saved successfully!'
     true
   end
 
-  # Load game : returns load game parameters hash
+  # Loads game from previously saved .msgpack file by unpacking it
+  # User can select from any of the saved games
+  # returns game object with parameters from the saved file
   def self.load_game
-    filesname_a = Dir.glob('save/*.msgpack')
+    filesname_a = Dir.glob('save/*.msgpack') # Lists all save files, stores in array
 
     puts 'Select the game from saved files: '
     filesname_a.each_with_index { |name, index| puts "#{index} > #{name.sub('save/', '').sub('.msgpack', '')}" }
@@ -67,24 +75,26 @@ class Game
     new(savefile_hash)
   end
 
-  # Player makes a guess of letter
+  # Lets user make a letter guess, returns guess
   def make_a_guess
-    puts "Chances remaining: #{life_i}"
-    puts 'Please guess a letter : '
-    # making it case insensitive & validating it
-    loop do
-      guess = gets.chomp.downcase
-      if (guess == '0') || (guess.length == 1 && guess.match?(/[A-Za-z]/))
-        return guess unless (correct_letters_a + incorrect_letters_a).include? guess
+    puts "Press '0' to save the current game. Please guess a letter : "
+    loop do # Loop continues till user enters a valid input
+      guess = gets.chomp.downcase # making it case insensiive
 
+      if (correct_letters_a + incorrect_letters_a).include? guess
         puts 'You have already entered this alphabet, please enter a new alphabet'
+      elsif guess.match?(/[[:alpha:]]/) && guess.length == 1
+        return guess
+      elsif guess == '0'
+        return guess
       else
         puts 'Please enter a valid alphabet'
       end
     end
   end
 
-  # Check if guess is correct or incorrect
+  # Checks if the letter guess is correct or incorrect, returns nil
+  # Reduces life by 1 on incorrect letter guess
   def check_guess(guess)
     if secret_word_a.include?(guess)
       correct_letters_a.push(guess)
@@ -96,7 +106,7 @@ class Game
     end
   end
 
-  # Check for a win
+  # Checks for a win (secret word guessed completely), returns true or false
   def game_won?
     secret_word_a.each do |letter|
       return false unless correct_letters_a.include?(letter)
@@ -106,7 +116,7 @@ class Game
     true
   end
 
-  # Check for game over (life_i == 0)
+  # Checks for game over (life_i == 0), returns true or false
   def game_over?
     return false unless life_i.zero?
 
@@ -115,7 +125,10 @@ class Game
     true
   end
 
-  # Print revealed letters in secret word & incorrect guesses
+  # Prints current game status:
+  # 1. Revealed letters in secret word
+  # 2. Incorrect guesses of letters
+  # 3. Chances remaining
   def to_s
     word = ''
     secret_word_a.each do |letter|
@@ -123,6 +136,7 @@ class Game
     end
 
     "Secret word: #{word}
-Incorrect letters are: #{incorrect_letters_a.join(', ')}"
+Incorrect letters are: #{incorrect_letters_a.join(', ')}
+Chances remaining: #{life_i}"
   end
 end
