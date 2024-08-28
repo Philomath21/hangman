@@ -19,8 +19,7 @@ def select_new_or_load
       return Game.new
     when '2'
       # <> code to select save file name
-      puts 'savefile_name'
-      return Game.load_game('sec')
+      return Game.load_game
     else
       puts 'Invalid input. Please enter a valid input : '
     end

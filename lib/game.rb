@@ -48,8 +48,21 @@ class Game
   end
 
   # Load game : returns load game parameters hash
-  def self.load_game(savefile_name)
-    savefile = File.binread("save/#{savefile_name}.msgpack")
+  def self.load_game
+    filesname_a = Dir.glob('save/*.msgpack')
+
+    puts 'Select the game from saved files: '
+    filesname_a.each_with_index { |name, index| puts "#{index} > #{name.sub('save/', '').sub('.msgpack', '')}" }
+    puts ' Please enter the index number of save file : '
+    begin
+      index = gets.chomp
+      savefile_name = filesname_a[index.to_i]
+    rescue StandardError
+      puts 'Incorrect entry. Please enter a valid index number of save file : '
+      retry
+    end
+
+    savefile = File.binread(savefile_name)
     savefile_hash = MessagePack.unpack(savefile) # savefile_hash
     new(savefile_hash)
   end
