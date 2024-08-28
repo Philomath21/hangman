@@ -1,3 +1,5 @@
+require 'msgpack'
+
 # Creating dictionary array as per given condition in project
 def create_dictionary_a
   # Reading dictiory file as array of words
@@ -9,7 +11,7 @@ def create_dictionary_a
 end
 
 class Game
-  @@save_count = 0 # rubocop:disable Style/ClassVars
+  # @@save_count = 0
   attr_accessor :correct_letters_a, :incorrect_letters_a, :life_i, :secret_word_a
 
   def initialize
@@ -30,15 +32,23 @@ You have to guess the secret word to win the game.
 You must make less than #{life_i} incorrect guesses.\n "
   end
 
-  # Save game on pressing 0
+  # Save game on pressing 0, serializing using MessagePack
   def asked_to_save_game?(guess)
     return false unless guess == '0'
 
-    @@save_count += 1 # rubocop:disable Style/ClassVars
-    save_a = [secret_word_a.join, life_i, correct_letters_a.join, incorrect_letters_a.join]
+    puts 'Rename save game as : '
+    savefile_name = gets.chomp
+
+    savefile_msgpack = {
+      secret_word_a: secret_word_a,
+      life_i: life_i,
+      correct_letters_a: correct_letters_a,
+      incorrect_letters_a: incorrect_letters_a
+    }.to_msgpack
+
     Dir.mkdir('save') unless Dir.exist?('save')
-    filename = "save/game_#{@@save_count}"
-    File.open(filename, 'w') { |file| file.puts save_a }
+    File.open("save/#{savefile_name}", 'w') { |file| file.puts savefile_msgpack }
+
     puts 'Game saved successfully!'
     true
   end
