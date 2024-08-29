@@ -31,28 +31,6 @@ class Game
     self.incorrect_letters_a = hash['incorrect_letters_a']
   end
 
-  # Saves game on pressing 0, serializes parameters hash using MessagePack
-  # returns true or false
-  def asked_to_save_game?(guess)
-    return false unless guess == '0'
-
-    Dir.mkdir('save') unless Dir.exist?('save')
-    puts 'Rename save game as : '
-    savefile_name = gets.chomp.downcase
-
-    savefile_hash = {
-      'secret_word_a' => secret_word_a,
-      'life_i' => life_i,
-      'correct_letters_a' => correct_letters_a,
-      'incorrect_letters_a' => incorrect_letters_a
-    }
-    savefile = MessagePack.pack(savefile_hash)
-    File.binwrite("save/#{savefile_name}.msgpack", savefile)
-
-    puts 'Game saved successfully!'
-    true
-  end
-
   # Loads game from previously saved .msgpack file by unpacking it
   # User can select from any of the saved games
   # returns game object with parameters from the saved file
@@ -73,37 +51,6 @@ class Game
     savefile = File.binread(savefile_name)
     savefile_hash = MessagePack.unpack(savefile) # savefile_hash
     new(savefile_hash)
-  end
-
-  # Lets user make a letter guess, returns guess
-  def make_a_guess
-    puts "Press '0' to save the current game. Please guess a letter : "
-    loop do # Loop continues till user enters a valid input
-      guess = gets.chomp.downcase # making it case insensiive
-
-      if (correct_letters_a + incorrect_letters_a).include? guess
-        puts 'You have already entered this alphabet, please enter a new alphabet'
-      elsif guess.match?(/[[:alpha:]]/) && guess.length == 1
-        return guess
-      elsif guess == '0'
-        return guess
-      else
-        puts 'Please enter a valid alphabet'
-      end
-    end
-  end
-
-  # Checks if the letter guess is correct or incorrect, returns nil
-  # Reduces life by 1 on incorrect letter guess
-  def check_guess(guess)
-    if secret_word_a.include?(guess)
-      correct_letters_a.push(guess)
-      puts "Your guess was correct!\n "
-    else
-      incorrect_letters_a.push(guess)
-      self.life_i = life_i - 1
-      puts "Your guess was incorect\n "
-    end
   end
 
   # Checks for a win (secret word guessed completely), returns true or false
@@ -138,5 +85,58 @@ class Game
     "Secret word: #{word}
 Incorrect letters are: #{incorrect_letters_a.join(', ')}
 Chances remaining: #{life_i}"
+  end
+
+  # Lets user make a letter guess, returns guess
+  def make_a_guess
+    puts "Press '0' to save the current game. Please guess a letter : "
+    loop do # Loop continues till user enters a valid input
+      guess = gets.chomp.downcase # making it case insensiive
+
+      if (correct_letters_a + incorrect_letters_a).include? guess
+        puts 'You have already entered this alphabet, please enter a new alphabet'
+      elsif guess.match?(/[[:alpha:]]/) && guess.length == 1
+        return guess
+      elsif guess == '0'
+        return guess
+      else
+        puts 'Please enter a valid alphabet'
+      end
+    end
+  end
+
+  # Saves game on pressing 0, serializes parameters hash using MessagePack
+  # returns true or false
+  def asked_to_save_game?(guess)
+    return false unless guess == '0'
+
+    Dir.mkdir('save') unless Dir.exist?('save')
+    puts 'Rename save game as : '
+    savefile_name = gets.chomp.downcase
+
+    savefile_hash = {
+      'secret_word_a' => secret_word_a,
+      'life_i' => life_i,
+      'correct_letters_a' => correct_letters_a,
+      'incorrect_letters_a' => incorrect_letters_a
+    }
+    savefile = MessagePack.pack(savefile_hash)
+    File.binwrite("save/#{savefile_name}.msgpack", savefile)
+
+    puts 'Game saved successfully!'
+    true
+  end
+
+  # Checks if the letter guess is correct or incorrect, returns nil
+  # Reduces life by 1 on incorrect letter guess
+  def check_guess(guess)
+    if secret_word_a.include?(guess)
+      correct_letters_a.push(guess)
+      puts "Your guess was correct!\n "
+    else
+      incorrect_letters_a.push(guess)
+      self.life_i = life_i - 1
+      puts "Your guess was incorect\n "
+    end
   end
 end
